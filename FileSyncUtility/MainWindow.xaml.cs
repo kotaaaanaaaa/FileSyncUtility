@@ -10,6 +10,7 @@ namespace FileSyncUtility
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = new MainWindowViewModel();
         }
     }
 }
