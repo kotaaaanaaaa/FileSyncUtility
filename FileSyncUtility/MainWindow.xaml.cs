@@ -1,4 +1,7 @@
-﻿using System.Windows;
+﻿using FileSyncUtility.Common;
+using System.IO;
+using System.Reflection;
+using System.Windows;
 
 namespace FileSyncUtility
 {
@@ -10,7 +13,12 @@ namespace FileSyncUtility
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainWindowViewModel();
+
+            ApplicationDbContext.ConnectionString = @"Data Source=default.db";
+            ApplicationDbContext.SqlFileBasePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Sqls");
+            var vm = new MainWindowViewModel();
+            vm.ReloadSynchronizeItems();
+            DataContext = vm;
         }
     }
 }

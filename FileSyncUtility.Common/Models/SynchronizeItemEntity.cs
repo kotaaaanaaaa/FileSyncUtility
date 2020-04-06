@@ -1,9 +1,18 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace FileSyncUtility
+namespace FileSyncUtility.Common.Models
 {
-    public class SynchronizeItem
+    [Table("SynchronizeItems")]
+    public class SynchronizeItemEntity
     {
+        /// <summary>
+        /// GUID
+        /// </summary>
+        [Key]
+        public string Guid { get; set; }
+
         /// <summary>
         /// 同期元パス
         /// </summary>
@@ -23,5 +32,10 @@ namespace FileSyncUtility
         /// 最終同期時刻
         /// </summary>
         public DateTime LastSynchronizeTime { get; set; }
+
+        public SynchronizeItemEntity()
+        {
+            Guid = System.Guid.NewGuid().ToString();
+        }
     }
 }

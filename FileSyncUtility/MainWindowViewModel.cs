@@ -1,6 +1,12 @@
-﻿using System.Collections.ObjectModel;
+﻿using FileSyncUtility.Common;
+using FileSyncUtility.Common.Models;
+using MaterialDesignThemes.Wpf;
 using Prism.Commands;
 using Prism.Mvvm;
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace FileSyncUtility
 {
@@ -8,9 +14,10 @@ namespace FileSyncUtility
     {
         public MainWindowViewModel()
         {
-            SettingCommand = new DelegateCommand(Setting);
-            AddSynchronizeItemCommand = new DelegateCommand(AddSynchronizeItem);
-            RemoveSynchronizeItemCommand = new DelegateCommand(RemoveSynchronizeItem);
+            SettingCommand = new DelegateCommand(async () => await Setting());
+            AddSynchronizeItemCommand = new DelegateCommand(async () => await AddSynchronizeItem());
+            RemoveSynchronizeItemCommand = new DelegateCommand<SynchronizeItem>(async item => await RemoveSynchronizeItem(item));
+            EditSynchronizeItemCommand = new DelegateCommand<SynchronizeItem>(async item => await EditSynchronizeItem(item));
         }
 
         public ObservableCollection<SynchronizeItem> SynchronizeItems
@@ -19,27 +26,69 @@ namespace FileSyncUtility
             set => SetProperty(ref _synchronizeItems, value);
         }
 
-        private ObservableCollection<SynchronizeItem> _synchronizeItems;
+        private ObservableCollection<SynchronizeItem> _synchronizeItems = new ObservableCollection<SynchronizeItem>();
 
-        private void Setting()
+        private async Task Setting()
         {
         }
-
         public DelegateCommand SettingCommand { get; set; }
 
-        private void AddSynchronizeItem()
+        private async Task AddSynchronizeItem()
         {
+            var item = new SynchronizeItem();
+            var vm = new EditSynchronizeItemDialogViewModel(item);
+            var dialog = new EditSynchronizeItemDialog();
+            dialog.DataContext = vm;
+            var result = await DialogHost.Show(dialog, "DialogHost");
+            await ReloadSynchronizeItems();
         }
-
         public DelegateCommand AddSynchronizeItemCommand { get; set; }
 
-        private void RemoveSynchronizeItem()
+        private async Task RemoveSynchronizeItem(SynchronizeItem item)
         {
+            var dialog = new RemoveSynchronizeItemDialog();
+            var result = (bool)await DialogHost.Show(dialog, "DialogHost");
+            if (result)
+            {
+                await using (var db = new ApplicationDbContext())
+                {
+                    db.Attach(item.Entity);
+                    db.Remove(item.Entity);
+                    await db.SaveChangesAsync();
+                }
+            }
+            await ReloadSynchronizeItems();
         }
+        public DelegateCommand<SynchronizeItem> RemoveSynchronizeItemCommand { get; set; }
 
-        public DelegateCommand RemoveSynchronizeItemCommand { get; set; }
+        private async Task EditSynchronizeItem(SynchronizeItem item)
+        {
+            var vm = new EditSynchronizeItemDialogViewModel(item);
+            var dialog = new EditSynchronizeItemDialog();
+            dialog.DataContext = vm;
+            var result = await DialogHost.Show(dialog, "DialogHost");
+            await ReloadSynchronizeItems();
+        }
+        public DelegateCommand<SynchronizeItem> EditSynchronizeItemCommand { get; set; }
+
+        public async Task ReloadSynchronizeItems()
+        {
+            await using (var db = new ApplicationDbContext())
+            {
+                SynchronizeItems.Clear();
+
+                db.EnsureCreated();
+                db.Migrate();
+                var items = db.SynchronizeItems.Select(x => new SynchronizeItem(x)).ToList();
+                items.ForEach(x =>
+                {
+                    SynchronizeItems.Add(x);
+                });
+            }
+        }
     }
 
+    [Obsolete(null, true)]
     public class MainWindowViewModelDesigner : MainWindowViewModel
     {
         public MainWindowViewModelDesigner()
