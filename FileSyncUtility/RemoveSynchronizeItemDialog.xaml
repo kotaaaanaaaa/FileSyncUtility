@@ -12,7 +12,8 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         <RichTextBox  Grid.Row="0" Grid.Column="0"
-                      Width="175">
+                      IsReadOnly="True"
+                      Width="180">
             <FlowDocument>
                 <Paragraph>This action <Span Foreground="Red">cannot</Span> be undone</Paragraph>
             </FlowDocument>
