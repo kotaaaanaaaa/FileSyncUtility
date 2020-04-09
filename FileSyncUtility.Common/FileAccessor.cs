@@ -124,7 +124,7 @@ namespace FileSyncUtility.Common
         /// <param name="username">接続時のユーザ名</param>
         /// <param name="password">接続時のパスワード</param>
         /// <returns></returns>
-        private static bool NetMount(string path, string username, string password)
+        public static bool NetMount(string path, string username, string password)
         {
             var result = NetMount(path, true, username, password);
             return result.StartsWith(@"コマンドは正常に終了しました。");
@@ -134,7 +134,7 @@ namespace FileSyncUtility.Common
         /// ネットワークフォルダのマウントを解除します
         /// </summary>
         /// <param name="path"></param>
-        private static void NetUnmount(string path)
+        public static void NetUnmount(string path)
         {
             NetMount(path, false, "", "");
         }

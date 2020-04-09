@@ -4,6 +4,22 @@ namespace FileSyncUtility.Common.Tests
 {
     public class FileAccessorTests
     {
+        [Fact]
+        public void NetMountTest1()
+        {
+            FileAccessor.NetMount(@"\\127.0.0.1", "", "").IsTrue();
+            bool exceptionRaised = false;
+            try
+            {
+                FileAccessor.NetUnmount(@"\\127.0.0.1");
+            }
+            catch
+            {
+                exceptionRaised = true;
+            }
+            exceptionRaised.IsFalse();
+        }
+
         [Fact()]
         public void EnumerateInfoTest()
         {
