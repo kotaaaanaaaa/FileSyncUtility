@@ -1,5 +1,5 @@
 ﻿using FileSyncUtility.Common;
-using FileSyncUtility.Common.Models;
+using FileSyncUtility.Models;
 using MaterialDesignThemes.Wpf;
 using Prism.Commands;
 using Prism.Mvvm;

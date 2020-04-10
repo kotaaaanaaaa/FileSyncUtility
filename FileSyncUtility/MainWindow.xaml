@@ -21,9 +21,27 @@
                       ItemsSource="{Binding SynchronizeItems}"
                       AutoGenerateColumns="False"
                       CanUserAddRows="False"
-                      CanUserSortColumns="False"
+                      CanUserReorderColumns="False"
+                      CanUserResizeColumns="False"
                       IsReadOnly="True">
                 <DataGrid.Columns>
+                    <DataGridTemplateColumn>
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Command ="{Binding Path=SynchronizeCommand}"
+                                        CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGrid}}}"
+                                        Width="24"
+                                        Height="24"
+                                        Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
+                                        materialDesign:ButtonProgressAssist.IsIndicatorVisible="{Binding Path=IsSyncing}"
+                                        materialDesign:ButtonProgressAssist.Value="-1"
+                                        materialDesign:ButtonProgressAssist.IsIndeterminate="True"
+                                        ToolTip="{Binding SourcePath}">
+                                    <materialDesign:PackIcon Kind="Sync" />
+                                </Button>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <DataGridTextColumn Binding="{Binding SourcePath}"
                                         Header="Source"
                                         Width="1*">
@@ -74,23 +92,33 @@
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
+            <Button Command ="{Binding SynchronizeAllItemCommand}"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Margin="14,12,0,0"
+                    Width="24"
+                    Height="24"
+                    Style="{StaticResource MaterialDesignIconButton}"
+                    ToolTip="add item." >
+                <materialDesign:PackIcon Kind="Sync" />
+            </Button>
             <Button Command ="{Binding AddSynchronizeItemCommand}"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
-                    Margin="0,10,10,0"
+                    Margin="0,12,9,0"
                     Width="24"
                     Height="24"
-                    Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
+                    Style="{StaticResource MaterialDesignIconButton}"
                     ToolTip="add item.">
                 <materialDesign:PackIcon Kind="Plus" />
             </Button>
             <Button Command ="{Binding SettingCommand}"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
-                    Margin="0,10,56,0"
+                    Margin="0,12,55,0"
                     Width="24"
                     Height="24"
-                    Style="{StaticResource MaterialDesignFloatingActionMiniButton}"
+                    Style="{StaticResource MaterialDesignIconButton}"
                     ToolTip="add item.">
                 <materialDesign:PackIcon Kind="Gear" />
             </Button>
