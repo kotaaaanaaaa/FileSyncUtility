@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace FileSyncUtility.Common
 {
@@ -12,14 +13,14 @@ namespace FileSyncUtility.Common
         /// </summary>
         /// <param name="src"></param>
         /// <param name="dst"></param>
-        public static void SimpleSynchronize(string src, string dst)
+        public static async Task SimpleSynchronize(string src, string dst)
         {
-            bool predict(FileInfo srcInfo, FileInfo dstInfo)
+            bool Predict(FileInfo srcInfo, FileInfo dstInfo)
             {
                 return true;
             }
 
-            SynchronizeInternal(src, dst, predict);
+            await SynchronizeInternal(src, dst, Predict);
         }
 
         /// <summary>
@@ -27,9 +28,9 @@ namespace FileSyncUtility.Common
         /// </summary>
         /// <param name="src"></param>
         /// <param name="dst"></param>
-        public static void FastSynchronize(string src, string dst)
+        public static async Task FastSynchronize(string src, string dst)
         {
-            bool predict(FileInfo srcInfo, FileInfo dstInfo)
+            bool Predict(FileInfo srcInfo, FileInfo dstInfo)
             {
                 if (srcInfo.Length != dstInfo.Length)
                     return true;
@@ -38,7 +39,7 @@ namespace FileSyncUtility.Common
                 return false;
             }
 
-            SynchronizeInternal(src, dst, predict);
+            await SynchronizeInternal(src, dst, Predict);
         }
 
         /// <summary>
@@ -47,23 +48,28 @@ namespace FileSyncUtility.Common
         /// <param name="src"></param>
         /// <param name="dst"></param>
         /// <param name="predict"></param>
-        private static void SynchronizeInternal(string src, string dst, Func<FileInfo, FileInfo, bool> predict)
+        private static async Task SynchronizeInternal(string src, string dst, Func<FileInfo, FileInfo, bool> predict)
         {
-            void action(string relative, IEnumerable<FileSystemInfoEntity> infos)
+            async Task SyncTask(string relative, IEnumerable<FileSystemInfoEntity> infos)
             {
-                var srcFiles = infos
-                    .Where(x => x.Value.Attributes == FileAttributes.Archive)
+                var srcFiles = infos.Where(x => x.Value.Attributes == FileAttributes.Archive)
                     .ToList();
-                var srcDirs = infos
-                    .Where(x => x.Value.Attributes == FileAttributes.Directory)
+                var srcDirs = infos.Where(x => x.Value.Attributes == FileAttributes.Directory)
                     .ToList();
+
                 if (srcFiles.Any())
                 {
-                    var dstFiles = FileAccessor.EnumerateInfo(dst, relative)
+                    var dstFiles = (await FileAccessor.EnumerateInfo(dst, relative))
                         .Where(x => x.Value.Attributes == FileAttributes.Archive);
                     var target = Filter(srcFiles, dstFiles, predict);
-                    target.ToList()
-                        .ForEach(x => FileAccessor.Copy(Path.Combine(src, x.Path), Path.Combine(dst, x.Path)));
+                    await Task.Run(() =>
+                    {
+                        target.ToList()
+                            .ForEach(x =>
+                            {
+                                FileAccessor.Copy(Path.Combine(src, x.Path), Path.Combine(dst, x.Path));
+                            });
+                    });
                 }
 
                 if (srcDirs.Any())
@@ -72,7 +78,7 @@ namespace FileSyncUtility.Common
                 }
             }
 
-            FileAccessor.EnumerateInfo(src, action);
+            await FileAccessor.EnumerateInfo(src, SyncTask);
         }
 
         /// <summary>

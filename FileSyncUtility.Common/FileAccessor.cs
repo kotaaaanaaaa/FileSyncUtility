@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace FileSyncUtility.Common
 {
@@ -12,11 +13,11 @@ namespace FileSyncUtility.Common
         /// FileSystemInfoを取得します
         /// </summary>
         /// <param name="path">パス</param>
-        /// <param name="action"></param>
+        /// <param name="syncTask"></param>
         /// <returns></returns>
-        public static IEnumerable<FileSystemInfoEntity> EnumerateInfo(string path, Action<string, IEnumerable<FileSystemInfoEntity>> action = null)
+        public static async Task<IEnumerable<FileSystemInfoEntity>> EnumerateInfo(string path, Func<string, IEnumerable<FileSystemInfoEntity>, Task> syncTask = null)
         {
-            return EnumerateInfo(path, "", action);
+            return await EnumerateInfo(path, "", syncTask);
         }
 
         /// <summary>
@@ -24,25 +25,31 @@ namespace FileSyncUtility.Common
         /// </summary>
         /// <param name="root">基点となるパス</param>
         /// <param name="relative">相対パス</param>
-        /// <param name="action"></param>
+        /// <param name="syncTask"></param>
         /// <returns></returns>
-        public static IEnumerable<FileSystemInfoEntity> EnumerateInfo(string root, string relative, Action<string, IEnumerable<FileSystemInfoEntity>> action = null)
+        public static async Task<IEnumerable<FileSystemInfoEntity>> EnumerateInfo(string root, string relative, Func<string, IEnumerable<FileSystemInfoEntity>, Task> syncTask = null)
         {
             var infos = FetchInfo(root, relative)
                 .ToList();
             var files = infos
                 .Where(x => x.Value.Attributes == FileAttributes.Archive);
-            action?.Invoke(relative, files);
+            if (syncTask != null)
+            {
+                await syncTask.Invoke(relative, files);
+            }
 
             var dirs = infos
                 .Where(x => x.Value.Attributes == FileAttributes.Directory);
-            action?.Invoke(relative, dirs);
+            if (syncTask != null)
+            {
+                await syncTask.Invoke(relative, dirs);
+            }
 
             dirs.ToList()
-                .ForEach(x =>
+                .ForEach(async x =>
                 {
                     Directory.CreateDirectory(Path.Combine(root, x.Path));
-                    var dirFiles = EnumerateInfo(root, x.Path, action);
+                    var dirFiles = await EnumerateInfo(root, x.Path, syncTask);
                     files = files.Union(dirFiles);
                 });
 
@@ -71,16 +78,14 @@ namespace FileSyncUtility.Common
                 {
                     Value = x,
                     Path = RelativePath(x.FullName, root),
-                }
-                );
+                });
             var dirs = di
                 .EnumerateDirectories(searchPattern, searchOption)
                 .Select(x => new FileSystemInfoEntity
                 {
                     Value = x,
                     Path = RelativePath(x.FullName, root),
-                }
-                );
+                });
             var infos = files.Union(dirs);
             return infos;
         }

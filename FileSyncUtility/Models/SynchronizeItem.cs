@@ -97,7 +97,7 @@ namespace FileSyncUtility.Models
                 await db.SaveChangesAsync();
             }
 
-            FileSynchronizer.FastSynchronize(SourcePath, DestinationPath);
+            await FileSynchronizer.FastSynchronize(SourcePath, DestinationPath);
 
             await using (var db = new ApplicationDbContext())
             {
