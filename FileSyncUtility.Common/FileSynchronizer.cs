@@ -52,9 +52,11 @@ namespace FileSyncUtility.Common
         {
             async Task SyncTask(string relative, IEnumerable<FileSystemInfoEntity> infos)
             {
-                var srcFiles = infos.Where(x => x.Value.Attributes == FileAttributes.Archive)
+                var srcFiles = infos
+                    .Where(x => (x.Value.Attributes & FileAttributes.Archive) == FileAttributes.Archive)
                     .ToList();
-                var srcDirs = infos.Where(x => x.Value.Attributes == FileAttributes.Directory)
+                var srcDirs = infos
+                    .Where(x => (x.Value.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
                     .ToList();
 
                 if (srcFiles.Any())
@@ -95,7 +97,7 @@ namespace FileSyncUtility.Common
                 if (!dstInfos.Any())
                     return true;
 
-                var dstInfo = dstInfos.First(x => x.Path == srcInfo.Path);
+                var dstInfo = dstInfos.FirstOrDefault(x => x.Path == srcInfo.Path);
                 if (dstInfo == null)
                 {
                     return true;

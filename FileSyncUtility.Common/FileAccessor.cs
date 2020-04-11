@@ -32,14 +32,14 @@ namespace FileSyncUtility.Common
             var infos = FetchInfo(root, relative)
                 .ToList();
             var files = infos
-                .Where(x => x.Value.Attributes == FileAttributes.Archive);
+                .Where(x => (x.Value.Attributes & FileAttributes.Archive) == FileAttributes.Archive);
             if (syncTask != null)
             {
                 await syncTask.Invoke(relative, files);
             }
 
             var dirs = infos
-                .Where(x => x.Value.Attributes == FileAttributes.Directory);
+                .Where(x => (x.Value.Attributes & FileAttributes.Directory) == FileAttributes.Directory);
             if (syncTask != null)
             {
                 await syncTask.Invoke(relative, dirs);
@@ -114,12 +114,19 @@ namespace FileSyncUtility.Common
         /// <param name="dst"></param>
         public static void Copy(string src, string dst)
         {
-            var di = new DirectoryInfo(dst);
-            var dir = di.Parent.FullName;
-            if (!Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
+            try
+            {
+                var di = new DirectoryInfo(dst);
+                var dir = di.Parent.FullName;
+                if (!Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
 
-            File.Copy(src, dst, true);
+                File.Copy(src, dst, true);
+            }
+            catch
+            {
+                //TODO
+            }
         }
 
         /// <summary>
