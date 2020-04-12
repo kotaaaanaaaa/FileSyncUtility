@@ -1,4 +1,5 @@
 ﻿using FileSyncUtility.Common;
+using Serilog;
 using System.IO;
 using System.Reflection;
 using System.Windows;
@@ -12,6 +13,12 @@ namespace FileSyncUtility
     {
         public MainWindow()
         {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.Debug()
+                .CreateLogger();
+            Log.Information("-----Application Start-----");
+
             InitializeComponent();
 
             ApplicationDbContext.ConnectionString = @"Data Source=default.db";

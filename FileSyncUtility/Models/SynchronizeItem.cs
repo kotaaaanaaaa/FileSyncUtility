@@ -4,6 +4,7 @@ using Prism.Commands;
 using Prism.Mvvm;
 using System;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace FileSyncUtility.Models
 {
@@ -84,16 +85,15 @@ namespace FileSyncUtility.Models
         /// <returns></returns>
         private async Task Synchronize()
         {
+            Log.Information("Synchronize start");
             IsSyncing = true;
             SynchronizeCommand.RaiseCanExecuteChanged();
 
             await using (var db = new ApplicationDbContext())
             {
                 LastExecuteTime = DateTime.Now;
-                db.SynchronizeItems
-                    .Attach(Entity);
-                db.Entry(Entity)
-                    .Property(x => x.LastExecuteTime).IsModified = true;
+                db.SynchronizeItems.Attach(Entity);
+                db.Entry(Entity).Property(x => x.LastExecuteTime).IsModified = true;
                 await db.SaveChangesAsync();
             }
 
@@ -108,6 +108,7 @@ namespace FileSyncUtility.Models
 
             IsSyncing = false;
             SynchronizeCommand.RaiseCanExecuteChanged();
+            Log.Information("Synchronize complete");
         }
         public DelegateCommand SynchronizeCommand { get; set; }
 

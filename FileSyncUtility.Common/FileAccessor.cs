@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace FileSyncUtility.Common
 {
@@ -29,6 +30,8 @@ namespace FileSyncUtility.Common
         /// <returns></returns>
         public static async Task<IEnumerable<FileSystemInfoEntity>> EnumerateInfo(string root, string relative, Func<string, IEnumerable<FileSystemInfoEntity>, Task> syncTask = null)
         {
+            Log.Debug("EnumerateInfo {@Relative}", relative);
+
             var infos = FetchInfo(root, relative)
                 .ToList();
             var files = infos
@@ -114,6 +117,8 @@ namespace FileSyncUtility.Common
         /// <param name="dst"></param>
         public static void Copy(string src, string dst)
         {
+            Log.Verbose("Copy {@SrcPath}", src);
+
             try
             {
                 var di = new DirectoryInfo(dst);

@@ -2,6 +2,7 @@
 using FileSyncUtility.Models;
 using Prism.Commands;
 using Prism.Mvvm;
+using Serilog;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -45,15 +46,15 @@ namespace FileSyncUtility
 
         private async Task Save()
         {
+            Log.Information("SaveSynchronizeItem {@Item}", Item.Entity);
+
             await using (var db = new ApplicationDbContext())
             {
                 if (db.SynchronizeItems.Any(x => x.Guid == Item.Guid))
                 {
-                    var entity = db
-                        .SynchronizeItems
-                        .Single(x => x.Guid == Item.Guid);
-                    entity.SourcePath = Item.SourcePath;
-                    entity.DestinationPath = Item.DestinationPath;
+                    db.SynchronizeItems.Attach(Item.Entity);
+                    db.Entry(Item.Entity).Property(x => x.SourcePath).IsModified = true;
+                    db.Entry(Item.Entity).Property(x => x.DestinationPath).IsModified = true;
                     await db.SaveChangesAsync();
                 }
                 else

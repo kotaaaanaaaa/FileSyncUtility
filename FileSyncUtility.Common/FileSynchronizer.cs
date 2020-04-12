@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace FileSyncUtility.Common
 {
@@ -15,6 +16,7 @@ namespace FileSyncUtility.Common
         /// <param name="dst"></param>
         public static async Task SimpleSynchronize(string src, string dst)
         {
+            Log.Information("SimpleSynchronize");
             bool Predict(FileInfo srcInfo, FileInfo dstInfo)
             {
                 return true;
@@ -30,6 +32,7 @@ namespace FileSyncUtility.Common
         /// <param name="dst"></param>
         public static async Task FastSynchronize(string src, string dst)
         {
+            Log.Information("FastSynchronize");
             bool Predict(FileInfo srcInfo, FileInfo dstInfo)
             {
                 if (srcInfo.Length != dstInfo.Length)

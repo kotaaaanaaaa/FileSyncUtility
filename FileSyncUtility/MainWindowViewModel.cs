@@ -3,6 +3,7 @@ using FileSyncUtility.Models;
 using MaterialDesignThemes.Wpf;
 using Prism.Commands;
 using Prism.Mvvm;
+using Serilog;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -48,6 +49,9 @@ namespace FileSyncUtility
         {
             var dialog = new RemoveSynchronizeItemDialog();
             var result = (bool)await DialogHost.Show(dialog, "DialogHost");
+
+            Log.Information("RemoveSynchronizeItem {@IsRemove} {@Item}", result, item.Entity);
+
             if (result)
             {
                 await using (var db = new ApplicationDbContext())
@@ -71,15 +75,21 @@ namespace FileSyncUtility
         }
         public DelegateCommand<SynchronizeItem> EditSynchronizeItemCommand { get; set; }
 
+        /// <summary>
+        /// 再読み込みする
+        /// </summary>
+        /// <returns></returns>
         public async Task ReloadSynchronizeItems()
         {
+            Log.Information("ReloadSynchronizeItems");
+
             await using (var db = new ApplicationDbContext())
             {
                 SynchronizeItems.Clear();
 
-                db.EnsureCreated();
-                db.Migrate();
-                var items = db.SynchronizeItems.Select(x => new SynchronizeItem(x)).ToList();
+                var items = db.SynchronizeItems
+                    .Select(x => new SynchronizeItem(x))
+                    .ToList();
                 items.ForEach(x =>
                 {
                     SynchronizeItems.Add(x);
