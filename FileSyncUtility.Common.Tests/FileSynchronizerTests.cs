@@ -68,7 +68,7 @@ namespace FileSyncUtility.Common.Tests
         {
             SetupData(SrcPath, type, path);
 
-            FileSynchronizer.FastSynchronize(SrcPath, DstPath);
+            FileSynchronizer.FastSynchronize(SrcPath, DstPath).Wait();
 
             var actualPath = Path.Combine(DstPath, path);
             if (char.ToUpper(type).Equals('D'))

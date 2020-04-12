@@ -27,36 +27,34 @@ namespace FileSyncUtility.Common
         /// <param name="root">基点となるパス</param>
         /// <param name="relative">相対パス</param>
         /// <param name="syncTask"></param>
+        /// <param name="topOnly"></param>
         /// <returns></returns>
-        public static async Task<IEnumerable<FileSystemInfoEntity>> EnumerateInfo(string root, string relative, Func<string, IEnumerable<FileSystemInfoEntity>, Task> syncTask = null)
+        public static async Task<IEnumerable<FileSystemInfoEntity>> EnumerateInfo(string root, string relative, Func<string, IEnumerable<FileSystemInfoEntity>, Task> syncTask = null, bool topOnly= false)
         {
             Log.Debug("EnumerateInfo {@Relative}", relative);
 
-            var infos = FetchInfo(root, relative)
-                .ToList();
-            var files = infos
-                .Where(x => (x.Value.Attributes & FileAttributes.Archive) == FileAttributes.Archive);
+            var infos = FetchInfo(root, relative);
+
             if (syncTask != null)
             {
-                await syncTask.Invoke(relative, files);
+                await syncTask.Invoke(relative, infos);
+            }
+
+            if (topOnly)
+            {
+                return infos;
             }
 
             var dirs = infos
                 .Where(x => (x.Value.Attributes & FileAttributes.Directory) == FileAttributes.Directory);
-            if (syncTask != null)
+
+            foreach (var dir in dirs)
             {
-                await syncTask.Invoke(relative, dirs);
+                var subInfos = await EnumerateInfo(root, dir.Path, syncTask);
+                infos = infos.Union(subInfos);
             }
 
-            dirs.ToList()
-                .ForEach(async x =>
-                {
-                    Directory.CreateDirectory(Path.Combine(root, x.Path));
-                    var dirFiles = await EnumerateInfo(root, x.Path, syncTask);
-                    files = files.Union(dirFiles);
-                });
-
-            return files;
+            return infos;
         }
 
         /// <summary>
@@ -75,21 +73,14 @@ namespace FileSyncUtility.Common
             if (!di.Exists)
                 return new List<FileSystemInfoEntity>();
 
-            var files = di
-                .EnumerateFiles(searchPattern, searchOption)
+            var infos = di
+                .EnumerateFileSystemInfos(searchPattern, searchOption)
                 .Select(x => new FileSystemInfoEntity
                 {
                     Value = x,
                     Path = RelativePath(x.FullName, root),
                 });
-            var dirs = di
-                .EnumerateDirectories(searchPattern, searchOption)
-                .Select(x => new FileSystemInfoEntity
-                {
-                    Value = x,
-                    Path = RelativePath(x.FullName, root),
-                });
-            var infos = files.Union(dirs);
+
             return infos;
         }
 

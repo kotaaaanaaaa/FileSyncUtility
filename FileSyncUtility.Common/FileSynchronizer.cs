@@ -64,7 +64,7 @@ namespace FileSyncUtility.Common
 
                 if (srcFiles.Any())
                 {
-                    var dstFiles = (await FileAccessor.EnumerateInfo(dst, relative))
+                    var dstFiles = (await FileAccessor.EnumerateInfo(dst, relative, null, true))
                         .Where(x => x.Value.Attributes == FileAttributes.Archive);
                     var target = Filter(srcFiles, dstFiles, predict);
                     await Task.Run(() =>
